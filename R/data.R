@@ -1,0 +1,14 @@
+#' Data set to run statistical tests
+#'
+#' @description A data set which includes ID, gender, height, weight and physical activity
+#'
+#' @format A data frame with 1000 rows and 5 variables (columns):
+#' \describe{
+#'   \item{ID}{Identification number of an individual person}
+#'   \item{gender}{gender of an individual person (i.e., male or female)}
+#'   \item{height}{height of an individual person (in cm)}
+#'   \item{weight}{weight of an individual person (in kg)}
+#'   \item{phys}{physical activity of an individual person}
+#' }
+#'
+"project2022"

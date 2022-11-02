@@ -1,0 +1,445 @@
+---
+title: "Project"
+author: "Rajlaxmi Patil"
+date: '2022-10-17'
+output: 
+ pdf_document
+params: 
+  data: "project2022.csv"
+bibliography: biblio.bib
+editor_options: 
+  markdown: 
+    wrap: 72
+
+
+
+---
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Abstract
+This report summarises the statistical modeling and analysis of the results associated with the 'project.csv' data set which includes 1000 observations of men and women aged 26-45 with information on their ID, gender, height, weight, physical activity. The purpose of the report is to study and analyse the three research questions which investigate if there is a linear relationship between height and weight, if the average height of male and female are the same and lastly, if there is an relationship between gender and the amount of physical activity. To answer these questions, various tests are performed such as linear regression analysis (@montgomery2021introduction), t-test (@xu2017differences) and chi square test (@mchugh2013chi).  By doing so, results can be obtained and therefore, conclusions can be made about the three research questions. 
+
+\newpage
+
+# Introduction
+The aim of the report is to answer the  research questions and analyse its results. The three research questions are:
+
+1. Is there a linear relationship between height and weight?
+
+2. Is the mean height of male and female the same? You can assume equal variances between male and female heights. 
+
+3. Is there any association between gender and the amount of physical activity?
+
+The first research question investigates whether the height and weight of the person is related in any way (i.e., correlated or uncorrelated). Regression analysis is used to determine if a relationship exists between the two variables. Further, the second research question examines if the average height of the two genders are equal or not. This can be carried out by the two sample t-test (@cressie1986use) as there is an assumption the variances are equal of the two genders. Lastly, the third research question examines whether there is any relation between gender and amount of physical activity and this can be analysed using the chi square test (@zibran2007chi).
+
+Thus, the report summarizes and documents all of the  statistical modeling and analysis  used during the statistical tests and then analyses each part in detail to come with answers for the three research questions.
+The report is organised as follows. Methodology decribes the methods used to carry out each statistical tests. Results portray the outcome of each statistical test along with the implications of those outcomes (i.e., analysis). Conclusion explains how the results may be interpreted or what conclusion can be drawn from them. 
+
+
+\newpage
+
+# Methodology
+## Is there a linear relationship between height and weight?
+***To answer this research question, regression analysis can be carried out. The process in doing so is as follows:***
+
+1. State the model and the hypothesis
+
+The model is:
+$$
+Y_i = \alpha + \beta X_i + \epsilon_i \\where \ \epsilon_i \ are \ i.i.d \ N(0, \sigma^2)
+$$
+
+For this research question, the null and alternative hypothesis is the following: 
+$$
+H_0 : \beta = 0
+$$ 
+
+
+$$
+H_1 : \beta \neq 0
+$$
+
+2. Check the assumptions
+- Produce a scatter plot to check if there is any relationship between the two variables. 
+```{r, message = FALSE, fig.align='center', fig.height=4,fig.width=6}
+setwd("~/Desktop/R/STAT1378/Project 3") #sets up the working directory
+library(readr) #loads the readr package
+library(tidyverse) #loads the tidyverse package
+project2022 <- read_csv(params$data) #reads the file 
+
+mod <- lm(weight ~ height, data = project2022) #fits linear models and is used to perform linear regression
+ggplot(data = project2022, mapping = aes(x = height, y = weight)) + #creates an empty plot with axes names
+  geom_point() + #used to create scatter plot
+  labs(title = "Scatter plot for height vs weight", x ="Height", y = "Weight") #adds titles to the graph and axes
+  
+```
+@tidyverse
+
+
+Visually, a positive relationship between height and weight can be identified (i.e., as height increases, the weight increases as well)
+
+- Produce a histogram of regression residuals to verify if variances are normally distributed.
+```{r, message = FALSE, fig.align='center', fig.height=4,fig.width=6}
+mod <- lm(weight ~ height, data = project2022) #fits linear models and is used to perform linear regression
+histogram <- ggplot(data = data.frame(resid <- mod$residuals)) + #creates an empty plot
+        geom_histogram(aes(x = resid), binwidth = 2, col = "black", fill = "steelblue") + #produces histogram
+        labs(title = "Histogram of Residuals", x = "Residuals") #lables the graph and x axis
+histogram
+
+
+```
+
+@tidyverse
+
+The histogram of residuals regression residuals shows that variance is normally distributed.  
+
+- Produce a Residuals vs fitted plot to verify linearity.
+```{r, message = FALSE, fig.align='center', fig.height=4,fig.width=6}
+model <- lm(weight ~ height, data = project2022) #performs linear regression
+p_base <- ggplot(data = data.frame(resid <- model$residuals, #creates an empty plot with residuals and fitted values as their axes
+  fitted = model$fitted.values
+))
+p2 <- p_base + geom_point(aes(x = fitted, y = resid)) + #produces a scatter plot
+  geom_hline(aes(yintercept = 0), colour = "red") + #produces a horizontal line 
+  xlab("Fitted values") + ylab("Residuals") + #labels the x and y axes
+  ggtitle("Residuals vs Fitted") #labels the graph
+p2
+```
+
+@tidyverse
+
+Residual plot shows no obvious pattern and verifies the linearity between the height and weight and the constant variance of the residuals.
+
+
+
+3. State the equations used to perform the statistical test manually
+
+- Manually, this requires some formulas to calculate the test statistic, p-value and the confidence interval. The formulas are:
+
+Test statistic
+$$
+\tau = \frac{\hat\beta}{s_{Y|X}/\sqrt{S_{XX}}}  \sim t_{n-2},  \ under \ H_0  
+$$
+where:
+$$
+\hat\beta = \frac{S_{XY}}{S_{XX}}
+$$
+
+$$
+S_{XX} = \sum_{i=1}^{n} (x_i - \overline x)^2=(n-1)s_X^2
+$$
+
+$$
+S_{XY} = \sum_{i=1}^{n} (x_i - \overline x)(y_i-\overline y) =\sum_{i=1}^{n} x_iy_i-n\overline x \ \overline y
+$$
+
+$$
+s_{Y|X} = \hat\sigma = \frac{\sqrt{S_{YY}-\hat\beta S_{XY}}}{n-2}
+$$
+
+P-value
+$$
+P-value = P(\mid{t_{df}}\mid - \mid{\tau_{obs}}\mid)
+$$ 
+
+Confidence interval
+$$
+\hat\beta\pm t_{n-2, \alpha/2} \ s.e(\hat\beta) = \hat\beta\pm t_{n-2, \alpha/2} \frac{s_{Y|X}}{\sqrt{S_{xx}}}
+$$
+
+
+4. Perform linear regression through lm function.
+
+- Linear regression model is the following:
+
+```{r, comment = NA}
+model <- lm(weight ~ height, data = project2022) #performs linear regression
+summary1 <- summary(model) #summarises the results of the lm function
+print(summary1) #prints the summary
+CI <- confint(model, level = 0.95)[2,] #calculates the confidence interval at 95%
+CI
+```
+From the linear regression model, the test statistic is `r summary1$coefficients[2,3]` and the p-value is `r summary1$coefficients[2,4]`. Further, the confidence interval is (`r CI`)
+
+
+\newpage
+
+
+## Is the mean height of male and female the same? You can assume equal variances between male and female heights.
+***To answer this research question, two sample t-test can be carried out which is a hypothetical test usually used to compare the means of two variables. The process in doing so is as follows:***
+1. State the hypothesis
+
+For this research question, the null and alternative hypothesis is the following: 
+$$
+H_0 : \mu_1 = \mu_2
+$$ 
+
+$$
+H_1 : \mu_1 \neq \mu_2
+$$
+2. Check the assumptions
+
+For the results of a two-sample t-test to be valid, the following assumptions should be met:
+
+- The two samples are independent. There is no relationship between the individuals in one sample as compared to the other.
+- The data should be approximately normally distributed.
+- The two population groups should have approximately equal variance.
+- The data in both samples was obtained using a random sampling method
+    from their respective populations.
+    
+For this particular data, equal variances between male and female heights is assumed, the data for the two samples are independent and  were obtained using a random sampling method. 
+
+In order to check the rest of the assumptions, the following graphs must be drawn:
+- Draw a qq plot to verify if the two samples are normally distributed (i.e., if the height of male and female samples are normally distributed).
+
+```{r, message = FALSE, fig.align='center', fig.height=4,fig.width=6}
+ggplot(data = project2022, mapping = aes(sample = height, col = gender)) + geom_qq() + geom_qq_line() + facet_wrap(~gender) +  xlab("Theoretical") + ylab("sample") + #labels the x and y axes
+    ggtitle("QQ plots") #labels the graph
+```
+As the points lie close the line, normality can be assumed.
+
+- Draw box plots to confirm that the the variance of male and female height are equal.
+```{r, message = FALSE, fig.align='center', fig.height=4,fig.width=6}
+ggplot(data = project2022, aes(y = height, x = gender, fill = gender)) + #creates an empty plot 
+  geom_boxplot(outlier.colour = "red") + #produces a boxplot
+  coord_flip()  #flips the boxplot
+
+```
+As the size of the box plots are almost equal, the standard deviations (variances) for
+both populations are equal.
+
+
+3. Collecting the summary of the data set
+
+```{r}
+summary2 <- project2022 %>%
+  group_by(gender) %>% #groups the data by gender
+  summarise(n = n(), mu = mean(height), sd = sd(height)) #summarises the data and calculates the mean, standard deviation and the number of variables
+
+knitr::kable(summary2) #produces a table
+```
+
+
+@tidyverse
+@magrittr
+
+
+
+4. Calculating test statistic and P-value manually
+
+The formulas used to calculate the test statistic and p-value are as follows:
+
+- Degrees of freedom 
+
+It is the number of values in the final calculation of a statistic that are free to vary. For a two sample t-test, the degrees of freedom can be calculated by: 
+$$
+df = n_1 + n_2 - 2
+$$ 
+
+
+- Test statistic 
+
+It shows how closely the observed data matches the distribution expected under the null hypothesis of the test. For the two sample t-test, the following formula is used: 
+$$
+\tau = \frac{(\overline{X}_1-\overline{X}_2)}{S_p \sqrt{\frac{1}{n_1}+\frac{1}{n_2}}}\sim t_{(n_1 + n_2 - 2)},  \ if \ H_0 \ is \ true
+$$ 
+
+where $\overline{X_{1}}$ and $\overline{X_{2}}$ are the sample means,
+$n_{1}$ and $n_{2}$ are the sample sizes, and where $S_{p}$ is
+calculated as: 
+$$
+s_p^2 = \frac{\sqrt{(n_1-1)s_1^2 + (n_2-1)s_2^2}}{(n_1+n_2-2)}
+$$ 
+where $s_1$ and $s_2$ are the sample standard deviations. Using the
+calculated test statistic, the p-value can be calculated.
+
+- P-value 
+
+It is the probability of obtaining the observed results, assuming the null hypothesis is true. Given that both large and small value of $T_{obs}$ would argue against $H_0$ in favour of $H_1$. The P-value can be calculated by: 
+$$
+P-value = P(\mid{t_{df}}\mid - \mid{\tau_{obs}}\mid)
+$$ 
+
+
+
+The test statistic and P-value attained by manually calculating are:
+```{r, comment=NA}
+df1 <- summary2$n[1] + summary2$n[2] - 2 #calculates the degrees of freedom
+var <- ((summary2$n[1]-1)*(summary2$sd[1])^2 + (summary2$n[2]-1)*(summary2$sd[2])^2) / (summary2$n[1] + summary2$n[2] - 2) #calculates the variance 
+
+sd <- sqrt(var) #calculates the standard deviation
+  
+
+Test.statistic <- (summary2$mu[2]-summary2$mu[1]) / (sd*sqrt((1/summary2$n[1])+(1/summary2$n[2]))) #calculates the test statistic
+
+cat(paste("Test statistic = ",Test.statistic)) #prints the test statistic
+
+P_value1 <- 2*pt(q = Test.statistic, df = df1, lower.tail=FALSE) #calculates the p-value
+cat(paste("P-value = ",P_value1)) #prints the p-value
+
+
+```
+
+5. Calculate test statistic and P-value through t.test function.
+```{r, comment=NA}
+  t_test <- t.test(height~gender,data = project2022, var.equal = TRUE) #performs the two sample t test
+t_test #prints the t test
+```
+Hence, the test statistic is `r t_test$statistic`, the p-value is `r t_test$p.value` and the confidence interval is (`r t_test$conf.int`) which is identical to manual calculations. 
+
+
+\newpage
+
+## Is there any association between gender and the amount of physical activity?
+***To answer this research question, chi square test can be carried out. The process in doing so is as follows:***
+
+1. State the hypothesis
+
+For this research question, the null and alternative hypothesis are the following:
+$$
+H_0 = Gender \ and \ physical \ activity \ are\ not\ related
+$$
+
+$$
+H_1 = Gender \ and \ physical \ activity \ are \ related
+$$
+
+2. Summarise the findings
+```{r}
+data_summary <- table(project2022$gender, project2022$phys) #collects the data together by counting the number of female and male for each physical ability
+knitr::kable(data_summary) #produces a table
+```
+
+3. Visualise the data set
+```{r, fig.align='center'}
+library(patchwork)
+data_summary <- table(project2022$gender, project2022$phys) #collects the data together by counting the number of female and male for each physical ability
+
+df <- data.frame(data_summary) #converts the table to a data frame
+
+p1 <- ggplot(data = df) + #produces an empty plot
+  geom_bar(aes(x = Var2, fill = Var1, y = Freq), #produces bar graph
+    stat = "identity", position = "dodge"
+  ) + xlab("Physical ability") + ylab("Frequency") + #labels the x and y axis
+  scale_fill_discrete(name = "Gender") #labels the legends
+
+p2 <- ggplot(data = df) + #produces an empty plot
+  geom_bar(aes(x = Var1, fill = Var2, y = Freq), #produces bar graph
+    stat = "identity", position = "dodge"
+  ) + xlab("Gender") + ylab("Frequency") + #labels the x and y axis
+  scale_fill_discrete(name = "Physical ability") #names the legends
+p1 + p2
+
+```
+4. Calculate the Test statistics and P-value manually
+
+- The test statistic for the Chi-Square Test of Independence is computed as:
+
+$$
+\tau = \sum_{i=1}^{g} \frac{(O_{i}-E_{i})^2}{E_{i}} \sim  X^2_{g-1}
+$$
+where 
+
+$O_{i}$ is the observed frequency in the $i^{th}$ category.
+
+$E_{i}$ is the expected frequency if $H_0$ is true where it is computed as:
+
+
+$$
+E_{ij} = \frac{row \ i \ total * col \ j \ total}{grand \ total}
+$$
+The P-value can be computed as:
+$$
+P-value = P(\mid{X^2_{g-1}}\mid - \mid{T_{obs}}\mid) 
+$$ 
+
+
+The test statistic and P-value attained by manually calculating are:
+```{r,comment = NA}
+data_summary <- table(project2022$gender, project2022$phys) #collects the data together 
+
+#observed values
+O_11 <- data_summary[1,1] 
+O_12 <- data_summary[1,2]
+O_13 <- data_summary[1,3]
+O_21 <- data_summary[2,1]
+O_22 <- data_summary[2,2]
+O_23 <- data_summary[2,3]
+#each observed value is extracted from the data summary table and is saved as an object
+
+
+#calculating the expected frequency for each one
+E_11 <- (sum(data_summary['Female',]) * sum(data_summary[, 'Intense'])) / ((sum(data_summary['Female',])) + (sum(data_summary['Male',])))
+
+E_12 <- (sum(data_summary['Female',]) * sum(data_summary[, 'Moderate'])) / ((sum(data_summary['Female',])) + (sum(data_summary['Male',])))
+
+E_13 <- (sum(data_summary['Female',]) * sum(data_summary[, 'None'])) / ((sum(data_summary['Female',])) + (sum(data_summary['Male',])))
+
+E_21 <- (sum(data_summary['Male',]) * sum(data_summary[, 'Intense'])) / ((sum(data_summary['Female',])) + (sum(data_summary['Male',])))
+
+E_22 <- (sum(data_summary['Male',]) * sum(data_summary[, 'Moderate'])) / ((sum(data_summary['Female',])) + (sum(data_summary['Male',])))
+
+E_23 <- (sum(data_summary['Male',]) * sum(data_summary[, 'None'])) / ((sum(data_summary['Female',])) + (sum(data_summary['Male',])))
+
+Test_statistic3 <- ((O_11 - E_11)^2 / E_11) + ((O_12 - E_12)^2 / E_12) + ((O_13 - E_13)^2 / E_13) + ((O_21 - E_21)^2 / E_21) + ((O_22 - E_22)^2 / E_22) + ((O_23 - E_23)^2 / E_23) 
+
+#calculates test statistic
+cat(paste("Test statistic = ",Test_statistic3)) #prints the test statistic
+
+P_value3 <- pchisq(q=Test_statistic3, df=2, lower.tail=FALSE) #calculates the p value
+cat(paste("P-value  = ",P_value3)) #prints the p value
+
+```
+
+
+
+5. Calculate the Test statistics and P-value through chisq function
+
+```{r, comment = NA}
+data_summary <- table(project2022$gender, project2022$phys) #collects the data togetherby counting the number of female and male for each physical ability
+chi_squared_test <- chisq.test(project2022$gender, project2022$phys, correct = FALSE) #performs chi-squared test
+print(chi_squared_test) #prints the chi-squared test
+```
+The test statistic is `r chi_squared_test$statistic` and the p-value is `r chi_squared_test$p.value`. Hence, it can be seen that the test statistic and p-value are identical to the ones calculated manually using the formulas. 
+
+
+
+
+\newpage
+
+
+# Results
+
+`r ifelse(summary1$coefficients[2,4] < 0.05, "For the first research question which includes the linear regression model, the p-value is less than 5% significance level. This illustrates that the null hypothesis is rejected meaning that beta is non-zero. This is further confirmed by the confidence interval. As 0 is not part of the confidence interval, beta is non-zero. This significance of beta being non-zero is that there is a correlation between the x and y variable so in this case, there is a linear relationship between the weight and height", "For the first research question which includes the linear regression model, the p-value is greater than 5% significance level. This illustrates that the null hypothesis is accepted meaning that beta is zero. This is further confirmed by the confidence interval. As 0 is  part of the confidence interval, beta is zero. This significance of beta being zero is that there is no linear relationship between the x and y variable so in this case, there is no correlation between the weight and height")`
+
+
+`r ifelse(t_test$p.value < 0.05, "For the second research question which includes the two sample t-test, the p-value is less than 5% significance level. Therefore, null hypothesis is rejected meaning that the difference between the mean height of male and female is non-zero. In other words, the mean height of male and female is different. ", "For the second research question which includes the two-sample t-test, the p-value is greater than 5% significance level. Therefore, null hypothesis is accepted meaning that the difference between the mean height of male and female is zero. In other words, the mean height of male and female is same.")` 
+
+
+`r ifelse(chi_squared_test$statistic < 0.05, "For the third research question which includes the chi squared test, the p-value is  less than 5% significance level. Therefore, null hypothesis is rejected meaning that gender and physical ability are dependependent.", "For the third research question which includes the chi squared test, the p-value is  greater than 5% significance level. Therefore, null hypothesis is not rejected meaning that gender and physical ability are independent")`
+
+  
+
+
+
+# Conclusion
+In conclusion, from all the tests performed, it can be concluded that for the first research question, `r ifelse(summary1$coefficients[2,4] < 0.05, "there is a linear relationship between height and weight as the null hypothesis is rejected which is backed by the p-value and confidence interval", "there is no linear relationship between height and weight as the null hypothesis is accepted which is backed by the p-value and confidence interval")`. For the second research question, `r ifelse(t_test$p.value < 0.05,"the mean height of male and female are not the same and this is confirmed by the p-value and confidence interval again.", "the mean height of male and female are  the same and this is confirmed by the p-value and the confidence interval again.")` Lastly, for the third research question, `r ifelse(chi_squared_test$statistic < 0.05, "the physical ability and gender are dependent of each other as the null hypothesis is rejected.", "the physical ability and gender are independent of each other as null hypothesis is not rejected")`. For all three research questions, the tests are performed through functions in R and manually in order to attain and confirm the results. 
+
+
+
+# References
+
+
+@zibran2007chi
+@mchugh2013chi
+@cressie1986use
+@xu2017differences
+@tidyverse
+@magrittr
+@montgomery2021introduction
+
+
+
